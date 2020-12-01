@@ -1,0 +1,9 @@
+EXPORTS
+	Init             @1
+	Count            @2
+	GetFriendlyName  @3
+	GetSerialNumber  @4
+	GetProductId     @5
+	GetVendorId      @6
+	GetDiskSize      @7
+	Clear            @8
