@@ -1,7 +1,7 @@
 /*
  * This file is a part of NSIS.
  *
- * Copyright (C) 1999-2009 Nullsoft and Contributors
+ * Copyright (C) 1999-2020 Nullsoft and Contributors
  *
  * Licensed under the zlib/libpng license (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  */
 
 //
-// Copyright (C) 1999-2009 Nullsoft
+// Copyright (C) 1999-2020 Nullsoft and Contributors
 //
 // modified by jiake (137729898@qq.com)
-// support Windows style name
-// support nullptr keyword
+// support for Windows style name
+// support for nullptr keyword
 //
 
 #ifndef _NSIS_PLUGIN_H
@@ -88,7 +88,7 @@ typedef enum {
 typedef UINT_PTR (*NSISPLUGINCALLBACK)(NSPIM);
 
 //
-// NSFLAGS
+// exec_flags_t
 //
 
 // extra_parameters data structures containing other interesting stuff
@@ -108,27 +108,32 @@ typedef struct _exec_flags_t {
 	int errlvl;
 	int alter_reg_view;
 	int status_update;
-} exec_flags_t, NSFLAGS, *PNSFLAGS;
+} exec_flags_t;
 
 //
-// NSSTACK
+// stack_t
 //
+
+#pragma warning(push)
+#pragma warning(disable: 4200)
 
 typedef struct _stack_t {
 	struct _stack_t *next;
 	TCHAR text[];
-} stack_t, NSSTACK, *PNSSTACK;
+} stack_t;
+
+#pragma warning(pop)
 
 //
-// NSPARAM
+// extra_parameters
 //
 
 typedef struct _extra_parameters {
-	NSFLAGS *exec_flags;
+	exec_flags_t *exec_flags;
 	int  (CALLBACK *ExecuteCodeSegment)(int, HWND);
 	void (CALLBACK *ValidateFilename)(LPTSTR);
 	int  (CALLBACK *RegisterPluginCallback)(HMODULE, NSISPLUGINCALLBACK);
-} extra_parameters, NSPARAM, *PNSPARAM;
+} extra_parameters;
 
 //
 // Variable Offset Enumration
