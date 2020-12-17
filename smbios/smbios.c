@@ -54,7 +54,7 @@ typedef enum _SMBIOS_DATA_FLAGS {
 //
 typedef struct _SMBIOS_DATA_PARAM {
 	UINT uFlags;
-	LONG nIndex;
+	BYTE nIndex;
 	BYTE nType;
 	BYTE nLength;
 	BYTE nData;
@@ -521,6 +521,7 @@ int _tmain(int argc, _TCHAR *argv[])
 			sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
 			FieldBroker(rgcData, cchData, pbData, cbData, &sdp);
 		}
+		LocalFree(pbData);
 	}
 
 	return 0;
