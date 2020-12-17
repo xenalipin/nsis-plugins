@@ -15,7 +15,11 @@
 //
 // PLUGINAPI
 //
+#if defined(__cplusplus)
 #define PLUGINAPI(Name_) extern "C" __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
+#else
+#define PLUGINAPI(Name_) __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
+#endif
 
 //
 // StringAutoT
@@ -87,12 +91,18 @@ static inline HRESULT HRESULT_FROM_ERROR(DWORD dwError)
 static bool PathIsEqual(const tstring &strPath1, const tstring &strPath2)
 {
 	LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
-	int nRet = CompareString(lcid, NORM_IGNORECASE, strPath1.data(), static_cast<int>(strPath1.size()), strPath2.data(), static_cast<int>(strPath2.size()));
+	auto data1 = strPath1.data();
+	auto size1 = strPath1.size();
+	auto back1 = strPath1.back();
+	auto data2 = strPath2.data();
+	auto size2 = strPath2.size();
+	auto back2 = strPath2.back();
+	int nRet = CompareString(lcid, NORM_IGNORECASE, data1, static_cast<int>(size1), data2, static_cast<int>(size2));
 	switch (nRet) {
 	case CSTR_GREATER_THAN:
-		return (((strPath2.size() + 1) == strPath1.size()) && (strPath1.back() == cBackslash) && (strPath2.back() != cBackslash));
+		return (((size2 + 1) == size1) && (back1 == cBackslash) && (back2 != cBackslash));
 	case CSTR_LESS_THAN:
-		return (((strPath1.size() + 1) == strPath2.size()) && (strPath2.back() == cBackslash) && (strPath1.back() != cBackslash));
+		return (((size1 + 1) == size2) && (back2 == cBackslash) && (back1 != cBackslash));
 	case CSTR_EQUAL:
 		return true;
 	default:

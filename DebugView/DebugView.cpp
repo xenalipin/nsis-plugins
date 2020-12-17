@@ -15,7 +15,11 @@
 //
 // PLUGINAPI
 //
+#if defined(__cplusplus)
 #define PLUGINAPI(Name_) extern "C" __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
+#else
+#define PLUGINAPI(Name_) __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
+#endif
 
 //
 // Global variables
