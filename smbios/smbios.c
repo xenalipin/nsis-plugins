@@ -418,8 +418,6 @@ PLUGINAPI(GetMemoryArrayCapacity)
 	DataBroker(stacktop, nLength, &sdp);
 }
 
-#if 1
-
 //
 // GetMemoryArrayNumbers
 //
@@ -433,8 +431,6 @@ PLUGINAPI(GetMemoryArrayNumbers)
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	DataBroker(stacktop, nLength, &sdp);
 }
-
-#endif
 
 //
 // GetMemoryManufacturer
