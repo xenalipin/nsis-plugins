@@ -136,7 +136,7 @@ typedef struct _extra_parameters {
 } extra_parameters;
 
 //
-// Variable Offset Enumration
+// variable offsets
 //
 
 enum {
