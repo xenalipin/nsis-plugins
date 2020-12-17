@@ -496,12 +496,13 @@ PLUGINAPI(GetMemorySize)
 
 int _tmain(int argc, _TCHAR *argv[])
 {
+	HRESULT hr;
 	TCHAR rgcData[1024] = { 0 };
 	DWORD cchData = ARRAYSIZE(rgcData);
-	HANDLE hFile;
 	BOOL bResult;
+	HANDLE hFile;
 
-	SHGetFolderPath(HWND_DESKTOP, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, rgcData);
+	hr = SHGetFolderPath(HWND_DESKTOP, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, rgcData);
 	bResult = PathAppend(rgcData, TEXT("smbios.dat"));
 	hFile = CreateFile(rgcData, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile != INVALID_HANDLE_VALUE)
