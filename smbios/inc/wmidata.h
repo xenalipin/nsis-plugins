@@ -58,7 +58,7 @@ DEFINE_GUID(MSWmi_ProviderInfo_GUID,
 // Warning: Header for class MSWmi_ProviderInfo cannot be created
 
 typedef struct _MSWmi_ProviderInfo {
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 } MSWmi_ProviderInfo, *PMSWmi_ProviderInfo;
 
 // MSWmi_PnPDeviceId - MSWmi_PnPDeviceId
@@ -78,7 +78,7 @@ DEFINE_GUID(MSWmi_PnPDeviceId_GUID,
 
 typedef struct _MSWmi_PnPDeviceId {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSWmi_PnPDeviceId_PnPDeviceId_ID 1
 } MSWmi_PnPDeviceId, *PMSWmi_PnPDeviceId;
 
@@ -538,7 +538,7 @@ DEFINE_GUID(MSSmBios_SMBiosEventlog_GUID,
 // Warning: Header for class MSSmBios_SMBiosEventlog cannot be created
 
 typedef struct _MSSmBios_SMBiosEventlog {
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 } MSSmBios_SMBiosEventlog, *PMSSmBios_SMBiosEventlog;
 
 // MSSmBios_SysidUUID - SYSID_UUID
@@ -1888,7 +1888,7 @@ DEFINE_GUID(MSNdis_EnumerateAdapter_GUID,
 
 typedef struct _MSNdis_EnumerateAdapter {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_EnumerateAdapter_DeviceName_ID 1
 } MSNdis_EnumerateAdapter, *PMSNdis_EnumerateAdapter;
 
@@ -1909,7 +1909,7 @@ DEFINE_GUID(MSNdis_NotifyAdapterRemoval_GUID,
 
 typedef struct _MSNdis_NotifyAdapterRemoval {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_NotifyAdapterRemoval_DeviceName_ID 1
 } MSNdis_NotifyAdapterRemoval, *PMSNdis_NotifyAdapterRemoval;
 
@@ -1930,7 +1930,7 @@ DEFINE_GUID(MSNdis_NotifyAdapterArrival_GUID,
 
 typedef struct _MSNdis_NotifyAdapterArrival {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_NotifyAdapterArrival_DeviceName_ID 1
 } MSNdis_NotifyAdapterArrival, *PMSNdis_NotifyAdapterArrival;
 
@@ -2588,7 +2588,7 @@ DEFINE_GUID(MSNdis_VendorDescription_GUID,
 
 typedef struct _MSNdis_VendorDescription {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_VendorDescription_NdisVendorDescription_ID 1
 } MSNdis_VendorDescription, *PMSNdis_VendorDescription;
 
@@ -3091,7 +3091,7 @@ DEFINE_GUID(MSNdis_CoVendorDescription_GUID,
 
 typedef struct _MSNdis_CoVendorDescription {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_CoVendorDescription_NdisCoVendorDescription_ID 1
 } MSNdis_CoVendorDescription, *PMSNdis_CoVendorDescription;
 
@@ -4687,7 +4687,7 @@ typedef struct _MSNdis_WmiEnumAdapter {
 	#define MSNdis_WmiEnumAdapter_NetLuid_SIZE sizeof(ULONGLONG)
 	#define MSNdis_WmiEnumAdapter_NetLuid_ID 3
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_WmiEnumAdapter_DeviceName_ID 4
 } MSNdis_WmiEnumAdapter, *PMSNdis_WmiEnumAdapter;
 
@@ -8761,7 +8761,7 @@ DEFINE_GUID(MSNdis_StatusProtocolBind_GUID,
 
 typedef struct _MSNdis_StatusProtocolBind {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusProtocolBind_Transport_ID 1
 } MSNdis_StatusProtocolBind, *PMSNdis_StatusProtocolBind;
 
@@ -8782,7 +8782,7 @@ DEFINE_GUID(MSNdis_StatusProtocolUnbind_GUID,
 
 typedef struct _MSNdis_StatusProtocolUnbind {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusProtocolUnbind_Transport_ID 1
 } MSNdis_StatusProtocolUnbind, *PMSNdis_StatusProtocolUnbind;
 
@@ -8803,7 +8803,7 @@ DEFINE_GUID(MSNdis_StatusDevicePowerOn_GUID,
 
 typedef struct _MSNdis_StatusDevicePowerOn {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusDevicePowerOn_Device_ID 1
 } MSNdis_StatusDevicePowerOn, *PMSNdis_StatusDevicePowerOn;
 
@@ -8824,7 +8824,7 @@ DEFINE_GUID(MSNdis_StatusDevicePowerOff_GUID,
 
 typedef struct _MSNdis_StatusDevicePowerOff {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusDevicePowerOff_Device_ID 1
 } MSNdis_StatusDevicePowerOff, *PMSNdis_StatusDevicePowerOff;
 
@@ -8845,7 +8845,7 @@ DEFINE_GUID(MSNdis_StatusDevicePowerOnEx_GUID,
 
 typedef struct _MSNdis_StatusDevicePowerOnEx {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusDevicePowerOnEx_Device_ID 1
 } MSNdis_StatusDevicePowerOnEx, *PMSNdis_StatusDevicePowerOnEx;
 
@@ -8866,7 +8866,7 @@ DEFINE_GUID(MSNdis_StatusDevicePowerOffEx_GUID,
 
 typedef struct _MSNdis_StatusDevicePowerOffEx {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSNdis_StatusDevicePowerOffEx_Device_ID 1
 } MSNdis_StatusDevicePowerOffEx, *PMSNdis_StatusDevicePowerOffEx;
 
@@ -9817,7 +9817,7 @@ typedef struct _MSDiskDriver_Performance {
 	#define MSDiskDriver_Performance_PerfData_SIZE sizeof(WMI_DISK_PERFORMANCE)
 	#define MSDiskDriver_Performance_PerfData_ID 1
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSDiskDriver_Performance_DeviceName_ID 2
 } MSDiskDriver_Performance, *PMSDiskDriver_Performance;
 
@@ -10249,7 +10249,7 @@ DEFINE_GUID(MSSerial_PortName_GUID,
 
 typedef struct _MSSerial_PortName {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define MSSerial_PortName_PortName_ID 1
 } MSSerial_PortName, *PMSSerial_PortName;
 
@@ -10928,7 +10928,7 @@ DEFINE_GUID(MSTapeSymbolicName_GUID,
 
 typedef struct _WMI_TAPE_SYMBOLIC_NAME {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define WMI_TAPE_SYMBOLIC_NAME_TapeSymbolicName_ID 1
 } WMI_TAPE_SYMBOLIC_NAME, *PWMI_TAPE_SYMBOLIC_NAME;
 
@@ -11217,7 +11217,7 @@ DEFINE_GUID(MSDeviceUI_FirmwareRevision_GUID,
 
 typedef struct _DEVICE_UI_FIRMWARE_REVISION {
 	//
-	BYTE VariableData[1];
+	UCHAR VariableData[1];
 	#define DEVICE_UI_FIRMWARE_REVISION_FirmwareRevision_ID 1
 } DEVICE_UI_FIRMWARE_REVISION, *PDEVICE_UI_FIRMWARE_REVISION;
 
