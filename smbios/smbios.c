@@ -494,6 +494,9 @@ PLUGINAPI(GetMemorySize)
 
 #if defined(_DEBUG)
 
+//
+// main
+//
 int _tmain(int argc, _TCHAR *argv[])
 {
 	HRESULT hr;
@@ -502,6 +505,39 @@ int _tmain(int argc, _TCHAR *argv[])
 	BOOL bResult;
 	HANDLE hFile;
 
+#if 1
+	WMIHANDLE hBlock;
+	ULONG nError = WmiOpenBlock((GUID *)&MSNdis_EnumerateAdapter_GUID, WMIGUID_QUERY, &hBlock);
+	if (nError == NO_ERROR)
+	{
+		BOOL bResult = FALSE;
+		HANDLE hHeap = GetProcessHeap();
+		BYTE *pbBlock = NULL;
+		DWORD cbBlock = 0;
+
+		do {
+			MSNdis_EnumerateAdapter *pWmiData;
+
+			nError = WmiQueryAllData(hBlock, &cbBlock, pbBlock);
+			switch (nError) {
+			case ERROR_INSUFFICIENT_BUFFER:
+				pbBlock = (BYTE *)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbBlock);
+				break;
+
+			case NO_ERROR:
+				pWmiData = (MSNdis_EnumerateAdapter *)(pbBlock + ((WNODE_ALL_DATA *)pbBlock)->DataBlockOffset);
+				HeapFree(hHeap, 0, pbBlock);
+				bResult = TRUE;
+				break;
+
+			default:
+				break;
+			}
+		} while (!bResult);
+
+		WmiCloseBlock(hBlock);
+	}
+#else
 	hr = SHGetFolderPath(HWND_DESKTOP, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, rgcData);
 	bResult = PathAppend(rgcData, TEXT("smbios.dat"));
 	hFile = CreateFile(rgcData, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -524,17 +560,25 @@ int _tmain(int argc, _TCHAR *argv[])
 		}
 		LocalFree(pbData);
 	}
+#endif
 
 	return 0;
 }
 
 #else
 
+//
+// DllMain
+//
 BOOL WINAPI _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
-		hModule = hinstDLL;
+		hModule = (HMODULE)hinstDLL;
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		return TRUE;
 	default:
 		return TRUE;
 	}

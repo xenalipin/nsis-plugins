@@ -174,7 +174,7 @@ ULONG
 WMIAPI
 WmiQuerySingleInstanceMultipleW(
 	PWMIHANDLE HandleList,
-	LPCWSTR * InstanceNames,
+	LPCWSTR *InstanceNames,
 	ULONG HandleCount,
 	PULONG InOutBufferSize,
 	LPVOID OutBuffer
@@ -187,7 +187,7 @@ ULONG
 WMIAPI
 WmiQuerySingleInstanceMultipleA(
 	PWMIHANDLE HandleList,
-	LPCSTR * InstanceNames,
+	LPCSTR *InstanceNames,
 	ULONG HandleCount,
 	PULONG InOutBufferSize,
 	LPVOID OutBuffer
@@ -309,25 +309,37 @@ typedef void (WINAPI *NOTIFICATIONCALLBACK)(
 	UINT_PTR NotificationContext
 );
 
-#ifndef MIDL_PASS
+#if !defined(MIDL_PASS)
 
 //
 // This guid is for notifications of changes to registration
 // {B48D49A1-E777-11d0-A50C-00A0C9062910}
 DEFINE_GUID(GUID_REGISTRATION_CHANGE_NOTIFICATION,
-0xb48d49a1, 0xe777, 0x11d0, 0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10);
+	0xb48d49a1,
+	0xe777,
+	0x11d0,
+	0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10
+);
 
 //
 // This guid id for notifications of new mof resources being added
 // {B48D49A2-E777-11d0-A50C-00A0C9062910}
 DEFINE_GUID(GUID_MOF_RESOURCE_ADDED_NOTIFICATION,
-0xb48d49a2, 0xe777, 0x11d0, 0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10);
+	0xb48d49a2,
+	0xe777,
+	0x11d0,
+	0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10
+);
 
 //
 // This guid id for notifications of new mof resources being added
 // {B48D49A3-E777-11d0-A50C-00A0C9062910}
 DEFINE_GUID(GUID_MOF_RESOURCE_REMOVED_NOTIFICATION,
-0xb48d49a3, 0xe777, 0x11d0, 0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10);
+	0xb48d49a3,
+	0xe777,
+	0x11d0,
+	0xa5, 0xc, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10
+);
 
 #endif
 
