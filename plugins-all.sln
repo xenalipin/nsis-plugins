@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PathUtils", "PathUtils\Path
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nsLogView", "nsLogView\nsLogView.vcxproj", "{7352D80F-A81A-43B0-A038-F524C8D55916}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smbios", "smbios\smbios.vcxproj", "{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{7352D80F-A81A-43B0-A038-F524C8D55916}.Release|x64.Build.0 = Release|x64
 		{7352D80F-A81A-43B0-A038-F524C8D55916}.Release|x86.ActiveCfg = Release|Win32
 		{7352D80F-A81A-43B0-A038-F524C8D55916}.Release|x86.Build.0 = Release|Win32
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Debug|x64.ActiveCfg = Debug|x64
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Debug|x64.Build.0 = Debug|x64
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Debug|x86.ActiveCfg = Debug|Win32
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Debug|x86.Build.0 = Debug|Win32
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Release|x64.ActiveCfg = Release|x64
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Release|x64.Build.0 = Release|x64
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Release|x86.ActiveCfg = Release|Win32
+		{CFB6009C-8CA5-4DE6-ACE9-A9CEB8044BAE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
