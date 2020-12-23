@@ -15,6 +15,7 @@
 #
 # NSIS 3.x 方式引用插件
 #
+
 !addplugindir "/x86-unicode" ".\x86-unicode"
 !addplugindir "/x86-ansi" ".\x86-ansi"
 
@@ -23,6 +24,7 @@
 #
 # NSIS 2.x 方式引用插件
 #
+
 !ifdef NSIS_UNICODE
 !addplugindir ".\x86-unicode"
 !else
@@ -34,13 +36,15 @@
 #
 # Required header files
 #
+
 !include MUI2.nsh
 
 #
-# DebugView Example
+# nsLogView Example
 #
-Name "DebugView"
-Outfile "DebugView.exe"
+
+Name "nsLogView"
+Outfile "nsLogView.exe"
 Caption "$(^Name)"
 
 InstallDir $TEMP
@@ -65,17 +69,17 @@ Section "-Install"
 SectionEnd
 
 Function onGUIInit
-	DebugView::Start
+	nsLogView::Start
 FunctionEnd
 
 Function Instfiles.Show
-	DebugView::Attach
+	nsLogView::Attach
 FunctionEnd
 
 Function Instfiles.Leave
-	DebugView::Detach
+	nsLogView::Detach
 FunctionEnd
 
 Function .onGUIEnd
-	DebugView::Stop
+	nsLogView::Stop
 FunctionEnd
