@@ -68,26 +68,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -162,7 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DebugView.cpp" />
+    <ClCompile Include="nsLogView.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
