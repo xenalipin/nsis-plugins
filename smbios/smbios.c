@@ -12,9 +12,9 @@
 #pragma comment(linker, "/align:128")
 
 #define INITGUID
-#include "wmium.h"
-#include "wmidata.h"
 #include "wmiguid.h"
+#include "wmidata.h"
+#include "wmium.h"
 #pragma comment(lib, "wmiapi.lib")
 #include "smbios.h"
 

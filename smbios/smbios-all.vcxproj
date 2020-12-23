@@ -22,7 +22,6 @@
     <ProjectGuid>{5E3E2AFD-1D6B-4997-A9B5-8ECBC8F6C31A}</ProjectGuid>
     <ProjectName>smbios</ProjectName>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseA|Win32'" Label="Configuration">
@@ -110,6 +109,9 @@
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseU|Win32'">
     <ClCompile>
@@ -132,6 +134,9 @@
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseA|x64'">
     <ClCompile>
@@ -154,6 +159,9 @@
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseU|x64'">
     <ClCompile>
@@ -176,6 +184,9 @@
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="smbios.c" />
