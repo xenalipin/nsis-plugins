@@ -104,7 +104,7 @@ PLUGINAPI(Stop)
 	FreeConsole();
 }
 
-#if _DEBUG
+#if defined(_DEBUG)
 
 int _tmain(int argc, _TCHAR *argv[])
 {
