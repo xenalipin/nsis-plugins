@@ -494,38 +494,77 @@ PLUGINAPI(GetMemorySize)
 
 #if defined(_DEBUG)
 
+static GUID wmiGuid = SMBIOS_DATA_GUID;
+
+typedef MSSmBios_RawSMBiosTables WMIType;
+
+typedef struct _WMIString {
+	USHORT Length;
+	TCHAR Buffer[];
+} WMIString;
+
 //
 // main
 //
 int _tmain(int argc, _TCHAR *argv[])
 {
 	HRESULT hr;
-	TCHAR rgcData[1024] = { 0 };
-	DWORD cchData = ARRAYSIZE(rgcData);
-	BOOL bResult;
-	HANDLE hFile;
 
-#if 1
-	WMIHANDLE hBlock;
-	ULONG nError = WmiOpenBlock((GUID *)&MSNdis_EnumerateAdapter_GUID, WMIGUID_QUERY, &hBlock);
+	ULONG nError;
+
+	WMIHANDLE hBlock = nullptr;
+	nError = WmiOpenBlock(&wmiGuid, WMIGUID_QUERY, &hBlock);
 	if (nError == NO_ERROR)
 	{
 		BOOL bResult = FALSE;
 		HANDLE hHeap = GetProcessHeap();
-		BYTE *pbBlock = NULL;
+		WNODE_ALL_DATA *pbBlock = NULL;
 		DWORD cbBlock = 0;
 
 		do {
-			MSNdis_EnumerateAdapter *pWmiData;
+			WMIString *pInstName;
+			WMIType *pWmiData;
+			ULONG *pOffsets;
 
 			nError = WmiQueryAllData(hBlock, &cbBlock, pbBlock);
 			switch (nError) {
 			case ERROR_INSUFFICIENT_BUFFER:
-				pbBlock = (BYTE *)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbBlock);
+				pbBlock = (WNODE_ALL_DATA *)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbBlock);
 				break;
 
 			case NO_ERROR:
-				pWmiData = (MSNdis_EnumerateAdapter *)(pbBlock + ((WNODE_ALL_DATA *)pbBlock)->DataBlockOffset);
+				pOffsets = (ULONG *)((BYTE *)pbBlock + pbBlock->OffsetInstanceNameOffsets);
+				for (WNODE_ALL_DATA *pAllData = pbBlock; ; pAllData = (WNODE_ALL_DATA *)((BYTE *)pAllData + pAllData->WnodeHeader.Linkage))
+				{
+					ULONG nInstance = pAllData->InstanceCount;
+					ULONG nOffset;
+					ULONG nLength;
+					if (pAllData->WnodeHeader.Flags & WNODE_FLAG_FIXED_INSTANCE_SIZE)
+					{
+						nOffset = pAllData->DataBlockOffset;
+						nLength = pAllData->FixedInstanceSize;
+						for (ULONG i = 0; i < nInstance; i++)
+						{
+							pInstName = (WMIString *)((BYTE *)pAllData + pOffsets[i]);
+							pWmiData = (WMIType *)((BYTE *)pAllData + nOffset);
+							nOffset += nLength;
+						}
+					}
+					else
+					{
+						for (ULONG i = 0; i < nInstance; i++)
+						{
+							nOffset = pAllData->OffsetInstanceDataAndLength[i].OffsetInstanceData;
+							nLength = pAllData->OffsetInstanceDataAndLength[i].LengthInstanceData;
+							pInstName = (WMIString *)((BYTE *)pAllData + pOffsets[i]);
+							pWmiData = (WMIType *)((BYTE *)pAllData + nOffset);
+						}
+					}
+					if (pAllData->WnodeHeader.Linkage == 0)
+					{
+						break;
+					}
+				}
 				HeapFree(hHeap, 0, pbBlock);
 				bResult = TRUE;
 				break;
@@ -537,7 +576,12 @@ int _tmain(int argc, _TCHAR *argv[])
 
 		WmiCloseBlock(hBlock);
 	}
-#else
+
+	BOOL bResult;
+	TCHAR rgcData[1024] = { 0 };
+	DWORD cchData = ARRAYSIZE(rgcData);
+	HANDLE hFile;
+
 	hr = SHGetFolderPath(HWND_DESKTOP, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, rgcData);
 	bResult = PathAppend(rgcData, TEXT("smbios.dat"));
 	hFile = CreateFile(rgcData, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -546,21 +590,20 @@ int _tmain(int argc, _TCHAR *argv[])
 		DWORD cbData = GetFileSize(hFile, NULL);
 		BYTE *pbData = (BYTE *)LocalAlloc(LPTR, cbData);
 		DWORD cbRead;
+
 		bResult = ReadFile(hFile, pbData, cbData, &cbRead, NULL);
 		CloseHandle(hFile);
-		if (bResult)
-		{
-			SMBIOS_DATA_PARAM sdp = { 0 };
-			sdp.nIndex = 0;
-			sdp.nType = MemoryDeviceInfo;
-			sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
-			sdp.nData = SMBFT_TYPE17_SIZE;
-			sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
-			FieldBroker(rgcData, cchData, pbData, cbData, &sdp);
-		}
+
+		SMBIOS_DATA_PARAM sdp = { 0 };
+		sdp.nIndex = 0;
+		sdp.nType = MemoryDeviceInfo;
+		sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
+		sdp.nData = SMBFT_TYPE17_SIZE;
+		sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
+		FieldBroker(rgcData, cchData, pbData, cbData, &sdp);
+
 		LocalFree(pbData);
 	}
-#endif
 
 	return 0;
 }
