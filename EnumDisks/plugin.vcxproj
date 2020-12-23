@@ -111,7 +111,6 @@
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
@@ -137,7 +136,6 @@
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>
@@ -163,7 +161,6 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
@@ -189,7 +186,6 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>

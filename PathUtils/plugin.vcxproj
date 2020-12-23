@@ -107,7 +107,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
@@ -132,7 +131,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);$(ProjectDir)lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>
@@ -157,7 +155,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-ansi"</Command>
@@ -182,7 +179,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);$(ProjectDir)lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wmiapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>@copy /y "$(TargetPath)" "$(ProjectDir)$(PlatformTarget)-unicode"</Command>
