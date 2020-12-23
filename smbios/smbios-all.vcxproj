@@ -68,26 +68,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseA|Win32'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseU|Win32'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseA|x64'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseU|x64'">
     <GenerateManifest>false</GenerateManifest>
     <EmbedManifest>false</EmbedManifest>
-    <IntDir>$(ProjectDir)..\$(PlatformTarget)\$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\$(ProjectName)\</IntDir>
+    <OutDir>$(ProjectDir)..\$(Configuration)-$(PlatformTarget)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseA|Win32'">
     <ClCompile>
