@@ -12,8 +12,8 @@
     <VC_LibraryPath_x64 Condition="'$(WDK_LibraryPath_x64)' != ''">$(WDK_LibraryPath_x64);$(VC_LibraryPath_x64)</VC_LibraryPath_x64>
     <VC_LibraryPath_x86 Condition="'$(WDK_LibraryPath_x86)' != ''">$(WDK_LibraryPath_x86);$(VC_LibraryPath_x86)</VC_LibraryPath_x86>
 
-    <LibraryPath Condition="'$(PlatformTarget)'=='x64'">$(WDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(PlatformTarget)'=='x86'">$(WDK_LibraryPath_x86);$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(PlatformTarget)'=='x64'">$(VC_LibraryPath_x64);$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(PlatformTarget)'=='x86'">$(VC_LibraryPath_x86);$(LibraryPath)</LibraryPath>
 
   </PropertyGroup>
 </Project>
