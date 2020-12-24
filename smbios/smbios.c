@@ -9,8 +9,6 @@
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 
-#pragma comment(linker, "/align:128")
-
 #define INITGUID
 #include "wmiguid.h"
 #include "wmidata.h"
