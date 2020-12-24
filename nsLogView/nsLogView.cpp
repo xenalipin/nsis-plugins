@@ -42,28 +42,32 @@ static LRESULT CALLBACK InstFilesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	{
 		static TCHAR rgcLine[] = { _T('\r'), _T('\n') };
 		static DWORD cchLine = ARRAYSIZE(rgcLine);
-		static DWORD cchData = 0;
 
-		HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-		NMLISTVIEW *pnmlv = reinterpret_cast<NMLISTVIEW *>(pnmh);
-
-		HWND hwndLV = pnmlv->hdr.hwndFrom;
-		int iItem = pnmlv->iItem;
-
-		std::vector<TCHAR> vInfo(dwRefData);
-		PTSTR pszInfo = static_cast<PTSTR>(vInfo.data());
-		DWORD cchInfo = static_cast<DWORD>(vInfo.size());
-
-		LVITEM lvi = { 0 };
-		lvi.cchTextMax = cchInfo;
-		lvi.pszText = pszInfo;
-
-		DWORD cchRead = (DWORD)SendMessage(hwndLV, LVM_GETITEMTEXT, iItem, reinterpret_cast<LPARAM>(&lvi));
-		if (cchRead > 0)
+		HLOCAL pszData = LocalAlloc(LPTR, dwRefData * sizeof(TCHAR));
+		if (pszData != nullptr)
 		{
-			WriteConsole(hStdOut, pszInfo, cchRead, &cchData, nullptr);
-			WriteConsole(hStdOut, rgcLine, cchLine, &cchData, nullptr);
+			HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD cchRead;
+			DWORD cchData;
+
+			NMLISTVIEW *pnmlv = reinterpret_cast<NMLISTVIEW *>(pnmh);
+
+			HWND hwndLV = pnmlv->hdr.hwndFrom;
+			int iItem = pnmlv->iItem;
+
+			LVITEM lvi = { 0 };
+
+			lvi.cchTextMax = static_cast<int>(dwRefData);
+			lvi.pszText = static_cast<LPTSTR>(pszData);
+
+			cchRead = static_cast<DWORD>(SendMessage(hwndLV, LVM_GETITEMTEXT, iItem, reinterpret_cast<LPARAM>(&lvi)));
+			if (cchRead > 0)
+			{
+				WriteConsole(hStdOut, pszData, cchRead, &cchData, nullptr);
+				WriteConsole(hStdOut, rgcLine, cchLine, &cchData, nullptr);
+			}
+
+			LocalFree(pszData);
 		}
 	}
 
@@ -118,7 +122,7 @@ int _tmain(int argc, _TCHAR *argv[])
 //
 // DllMain
 //
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
