@@ -1,9 +1,9 @@
 EXPORTS
 	Init             @1
 	Count            @2
-	GetEnumerator    @3
-	GetFriendlyName  @4
-	GetSerialNumber  @5
+	GetFriendlyName  @3
+	GetSerialNumber  @4
+	GetEnumerator    @5
 	GetProductId     @6
 	GetVendorId      @7
 	GetDiskSize      @8
