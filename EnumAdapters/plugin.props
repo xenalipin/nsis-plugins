@@ -1,0 +1,19 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(ConfigurationType)' == 'DynamicLibrary'">
+
+    <_WDK710_InstallLocation Condition="'$(_WDK710_InstallLocation)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\KitSetup\Configured-Kits\{B4285279-1846-49B4-B8FD-B9EAF0FF17DA}\{68656B6B-555E-5459-5E5D-6363635E5F61}@Setup-Install-Location)</_WDK710_InstallLocation>
+    <_WDK710_InstallLocation Condition="'$(_WDK710_InstallLocation)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\KitSetup\Configured-Kits\{B4285279-1846-49B4-B8FD-B9EAF0FF17DA}\{68656B6B-555E-5459-5E5D-6363635E5F61}@Setup-Install-Location)</_WDK710_InstallLocation>
+
+    <_WDK710_Installed Condition="'$(_WDK710_InstallLocation)' != '' and Exists('$(_WDK710_InstallLocation)')">true</_WDK710_Installed>
+
+    <WDK_LibraryPath_x64 Condition="'$(_WDK710_Installed)' == 'true'">$(_WDK710_InstallLocation)lib\crt\amd64</WDK_LibraryPath_x64>
+    <WDK_LibraryPath_x86 Condition="'$(_WDK710_Installed)' == 'true'">$(_WDK710_InstallLocation)lib\crt\i386</WDK_LibraryPath_x86>
+
+    <VC_LibraryPath_x64 Condition="'$(WDK_LibraryPath_x64)' != ''">$(WDK_LibraryPath_x64);$(VC_LibraryPath_x64)</VC_LibraryPath_x64>
+    <VC_LibraryPath_x86 Condition="'$(WDK_LibraryPath_x86)' != ''">$(WDK_LibraryPath_x86);$(VC_LibraryPath_x86)</VC_LibraryPath_x86>
+
+    <LibraryPath Condition="'$(PlatformTarget)'=='x64'">$(VC_LibraryPath_x64);$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(PlatformTarget)'=='x86'">$(VC_LibraryPath_x86);$(LibraryPath)</LibraryPath>
+
+  </PropertyGroup>
+</Project>

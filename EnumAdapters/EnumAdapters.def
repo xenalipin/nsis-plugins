@@ -1,0 +1,10 @@
+EXPORTS
+	Init               @1
+	Count              @2
+	GetFriendlyName    @3
+	GetDescription     @4
+	GetEnumerator      @5
+	GetMacAddress      @6
+	GetMediumType      @7
+	GetIpAddress       @8
+	Clear              @9
