@@ -39,21 +39,14 @@ template <> struct StringAutoT<char>
 };
 
 //
-// tstring
-//
-using tstring = typename StringAutoT<TCHAR>::type;
-
-//
 // StringT
 //
-template <typename T>
-	using StringT = typename StringAutoT<T>::type;
+template <typename T> using StringT = typename StringAutoT<T>::type;
 
 //
-// ArrayT
+// tstring
 //
-template <typename T>
-	using ArrayT = std::vector<T>;
+typedef typename StringAutoT<TCHAR>::type tstring;
 
 //
 // Global variables
@@ -63,8 +56,7 @@ static HMODULE hModule = nullptr;
 static const TCHAR szPathKey[] = _T(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
 static const TCHAR szPathName[] = _T("Path");
 
-static const TCHAR szFmtHex[] = _T("0x%08X");
-static const TCHAR szFmtDec[] = _T("%d");
+static const TCHAR szFormat[] = _T("%d");
 
 static const TCHAR cBackslash = _T('\\');
 static const TCHAR cSemicolon = _T(';');
@@ -125,12 +117,12 @@ static DWORD RegGetStringEx(HKEY hKey, LPCTSTR pszName, DWORD *pdwType, tstring 
 		if ((dwType == REG_SZ) || (dwType == REG_EXPAND_SZ))
 		{
 			HANDLE hHeap = GetProcessHeap();
-			DWORD cbRead = cbData;
 			PVOID pvData = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbData);
+			DWORD cbRead = cbData;
 			if (pvData != nullptr)
 			{
 				dwError = RegQueryValueEx(hKey, pszName, nullptr, pdwType, static_cast<BYTE *>(pvData), &cbRead);
-				strData.assign(static_cast<PCTSTR>(pvData));
+				strData.assign(static_cast<LPCTSTR>(pvData));
 				HeapFree(hHeap, 0, pvData);
 			}
 			else
@@ -158,14 +150,20 @@ static DWORD RegSetStringEx(HKEY hKey, LPCTSTR pszName, DWORD dwType, const tstr
 }
 
 //
-// ModifyPathData
+// namespace Paths
 //
-static tstring &ModifyPathData(tstring &strData, const tstring &strPath, BOOL bAppend)
+namespace Paths
+{
+
+//
+// UpdatePathItem
+//
+static tstring &UpdatePathItem(tstring &strData, const tstring &strPath, BOOL fAppend)
 {
 	tstring::size_type ulOffset = 0;
 	tstring::size_type ulCurPos;
 
-	bool bPresent = false;
+	bool fExisted = false;
 
 	if (strData.back() != cSemicolon)
 	{
@@ -178,11 +176,11 @@ static tstring &ModifyPathData(tstring &strData, const tstring &strPath, BOOL bA
 
 		if (PathIsEqual(strItem, strPath))
 		{
-			if (bAppend && !bPresent)
+			if (fAppend && !fExisted)
 			{
 				strData.replace(ulOffset, strItem.size(), strPath);
 				ulOffset += (strPath.size() + 1);
-				bPresent = TRUE;
+				fExisted = true;
 			}
 			else
 			{
@@ -195,7 +193,7 @@ static tstring &ModifyPathData(tstring &strData, const tstring &strPath, BOOL bA
 		}
 	}
 
-	if (bAppend && !bPresent)
+	if (fAppend && !fExisted)
 	{
 		strData.append(strPath);
 		strData += cSemicolon;
@@ -205,111 +203,51 @@ static tstring &ModifyPathData(tstring &strData, const tstring &strPath, BOOL bA
 }
 
 //
-// ModifyPathRegistry
+// UpdateRegistry
 //
-static HRESULT ModifyPathRegistry(const tstring &strPath, BOOL bAppend)
+static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
 {
-	HRESULT hr;
-
 	DWORD dwError;
-	HKEY hKey;
+	HKEY hSubKey;
 
-	dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szPathKey, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey);
+	dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szPathKey, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hSubKey);
 	if (dwError == ERROR_SUCCESS)
 	{
+		DWORD_PTR dwResult;
 		tstring strData;
 		DWORD dwType;
 
-		dwError = RegGetStringEx(hKey, szPathName, &dwType, strData);
+		dwError = RegGetStringEx(hSubKey, szPathName, &dwType, strData);
 		if (dwError == ERROR_SUCCESS)
 		{
-			dwError = RegSetStringEx(hKey, szPathName, dwType, ModifyPathData(strData, strPath, bAppend));
+			dwError = RegSetStringEx(hSubKey, szPathName, dwType, UpdatePathItem(strData, strPath, bAppend));
 			if (dwError == ERROR_SUCCESS)
 			{
-				DWORD_PTR dwResult;
 				if (!SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(_T("Environment")), SMTO_ABORTIFHUNG, 128, &dwResult))
 				{
-					hr = HRESULT_FROM_ERROR(GetLastError());
-				}
-				else
-				{
-					hr = S_OK;
+					dwError = GetLastError();
 				}
 			}
-			else
-			{
-				hr = HRESULT_FROM_ERROR(dwError);
-			}
-		}
-		else
-		{
-			hr = HRESULT_FROM_ERROR(dwError);
 		}
 
-		RegCloseKey(hKey);
-	}
-	else
-	{
-		hr = HRESULT_FROM_ERROR(dwError);
+		RegCloseKey(hSubKey);
 	}
 
-	return hr;
+	return dwError;
 }
 
 //
-// ModifyPathWithStatus
+// UpdateResult
 //
-static void ModifyPathWithStatus(LPTSTR pszData, int nData, const tstring &strPath, BOOL bAppend)
+static void UpdateResult(LPTSTR pszData, int cchData, const tstring &strPath, BOOL bAppend)
 {
-	HRESULT hr;
-
-	if (!strPath.empty())
-	{
-		hr = ModifyPathRegistry(strPath, bAppend);
-	}
-	else
-	{
-		hr = E_INVALIDARG;
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		wnsprintf(pszData, nData, szFmtDec, hr);
-	}
-	else
-	{
-		wnsprintf(pszData, nData, szFmtHex, hr);
-	}
+	wnsprintf(pszData, cchData, szFmtHex, UpdateRegistry(strPath, bAppend));
 }
 
 //
-// ModifyPathFromNSIS
+// VerifyPathItem
 //
-static void ModifyPathFromNSIS(stack_t **stacktop, int nLength, BOOL bAppend)
-{
-	tstring strPath;
-
-	if (*stacktop != nullptr)
-	{
-		stack_t *th = *stacktop;
-		strPath.assign(th->text);
-		*stacktop = th->next;
-		GlobalFree(th);
-	}
-
-	stack_t *th = (stack_t *)GlobalAlloc(GPTR, (sizeof(stack_t) + nLength * sizeof(TCHAR)));
-	if (th != nullptr)
-	{
-		ModifyPathWithStatus(th->text, nLength, strPath, bAppend);
-		th->next = *stacktop;
-		*stacktop = th;
-	}
-}
-
-//
-// VerifyPathData
-//
-static bool VerifyPathData(tstring &strData, const tstring &strPath)
+static bool VerifyPathItem(tstring &strData, const tstring &strPath)
 {
 	tstring::size_type ulOffset = 0;
 	tstring::size_type ulCurPos;
@@ -335,9 +273,9 @@ static bool VerifyPathData(tstring &strData, const tstring &strPath)
 }
 
 //
-// VerifyPathRegistry
+// VerifyRegistry
 //
-static BOOL VerifyPathRegistry(const tstring &strPath)
+static BOOL VerifyRegistry(const tstring &strPath)
 {
 	BOOL bResult;
 
@@ -352,7 +290,7 @@ static BOOL VerifyPathRegistry(const tstring &strPath)
 		dwError = RegGetStringEx(hKey, szPathName, nullptr, strData);
 		if (dwError == ERROR_SUCCESS)
 		{
-			bResult = VerifyPathData(strData, strPath);
+			bResult = VerifyPathItem(strData, strPath);
 		}
 		else
 		{
@@ -370,17 +308,19 @@ static BOOL VerifyPathRegistry(const tstring &strPath)
 }
 
 //
-// VerifyPathWithStatus
+// VerifyResult
 //
-static void VerifyPathWithStatus(LPTSTR pszData, int nData, const tstring &strPath)
+static void VerifyResult(LPTSTR pszData, int cchData, const tstring &strPath)
 {
-	wnsprintf(pszData, nData, szFmtDec, VerifyPathRegistry(strPath));
+	wnsprintf(pszData, cchData, szFormat, VerifyRegistry(strPath));
+}
+
 }
 
 //
-// VerifyPathFromNSIS
+// PathsUpdateImpl
 //
-static void VerifyPathFromNSIS(stack_t **stacktop, int nLength)
+static void PathsUpdateImpl(stack_t **stacktop, int nLength, BOOL bAppend)
 {
 	tstring strPath;
 
@@ -395,7 +335,31 @@ static void VerifyPathFromNSIS(stack_t **stacktop, int nLength)
 	stack_t *th = (stack_t *)GlobalAlloc(GPTR, (sizeof(stack_t) + nLength * sizeof(TCHAR)));
 	if (th != nullptr)
 	{
-		VerifyPathWithStatus(th->text, nLength, strPath);
+		Paths::UpdateResult(th->text, nLength, strPath, bAppend);
+		th->next = *stacktop;
+		*stacktop = th;
+	}
+}
+
+//
+// PathsVerifyImpl
+//
+static void PathsVerifyImpl(stack_t **stacktop, int nLength)
+{
+	tstring strPath;
+
+	if (*stacktop != nullptr)
+	{
+		stack_t *th = *stacktop;
+		strPath.assign(th->text);
+		*stacktop = th->next;
+		GlobalFree(th);
+	}
+
+	stack_t *th = (stack_t *)GlobalAlloc(GPTR, (sizeof(stack_t) + nLength * sizeof(TCHAR)));
+	if (th != nullptr)
+	{
+		Paths::VerifyResult(th->text, nLength, strPath);
 		th->next = *stacktop;
 		*stacktop = th;
 	}
@@ -409,7 +373,7 @@ PLUGINAPI(Append)
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	if (stacktop != nullptr)
 	{
-		ModifyPathFromNSIS(stacktop, nLength, TRUE);
+		PathsUpdateImpl(stacktop, nLength, TRUE);
 	}
 }
 
@@ -421,7 +385,7 @@ PLUGINAPI(Remove)
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	if (stacktop != nullptr)
 	{
-		ModifyPathFromNSIS(stacktop, nLength, FALSE);
+		PathsUpdateImpl(stacktop, nLength, FALSE);
 	}
 }
 
@@ -433,7 +397,7 @@ PLUGINAPI(Exists)
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	if (stacktop != nullptr)
 	{
-		VerifyPathFromNSIS(stacktop, nLength);
+		PathsVerifyImpl(stacktop, nLength);
 	}
 }
 
@@ -447,19 +411,19 @@ int _tmain(int argc, _TCHAR *argv[])
 	tstring strPath(_T(R"(D:\Git\Bin)"));
 
 	tstring strData1(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
-	ModifyPathData(strData1, strPath, FALSE);
+	Paths::UpdatePathItem(strData1, strPath, FALSE);
 
 	tstring strData2(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
-	ModifyPathData(strData2, strPath, TRUE);
+	Paths::UpdatePathItem(strData2, strPath, TRUE);
 
 	tstring strData3(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
-	ModifyPathData(strData3, strPath, FALSE);
+	Paths::UpdatePathItem(strData3, strPath, FALSE);
 
 	tstring strData4(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
-	ModifyPathData(strData4, strPath, TRUE);
+	Paths::UpdatePathItem(strData4, strPath, TRUE);
 
-	ModifyPathWithStatus(rgcInfo, cchInfo, strPath, FALSE);
-	ModifyPathWithStatus(rgcInfo, cchInfo, strPath, TRUE);
+	Paths::UpdateResult(rgcInfo, cchInfo, strPath, FALSE);
+	Paths::UpdateResult(rgcInfo, cchInfo, strPath, TRUE);
 
 	return !getchar();
 }

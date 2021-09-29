@@ -73,9 +73,9 @@ static UINT_PTR PluginCallback(NSPIM msg)
 }
 
 //
-// FieldHandler_Capacity
+// smbios_read_capacity
 //
-DECLSPEC_NOINLINE static LONG CALLBACK FieldHandler_Capacity(SMBIOS_HEADER *pHeader)
+DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_capacity(SMBIOS_HEADER *pHeader)
 {
 	PHYSICAL_MEMORY_ARRAY_INFORMATION *ppmai = (PHYSICAL_MEMORY_ARRAY_INFORMATION *)pHeader;
 	if ((ppmai->Length >= SMBIOS_TYPE16_SIZE_0207) && (ppmai->MaximumCapacity == 0x80000000UL))
@@ -89,9 +89,9 @@ DECLSPEC_NOINLINE static LONG CALLBACK FieldHandler_Capacity(SMBIOS_HEADER *pHea
 }
 
 //
-// FieldHandler_Size
+// smbios_read_size
 //
-DECLSPEC_NOINLINE static LONG CALLBACK FieldHandler_Size(SMBIOS_HEADER *pHeader)
+DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_size(SMBIOS_HEADER *pHeader)
 {
 	MEMORY_DEVICE_INFORMATION *pmdi = (MEMORY_DEVICE_INFORMATION *)pHeader;
 	switch (pmdi->Size) {
@@ -116,9 +116,9 @@ DECLSPEC_NOINLINE static LONG CALLBACK FieldHandler_Size(SMBIOS_HEADER *pHeader)
 }
 
 //
-// FieldHandler_String
+// smbios_read_string
 //
-DECLSPEC_NOINLINE static void CALLBACK FieldHandler_String(LPTSTR pszData, DWORD cchData, SMBIOS_HEADER *pHeader, BYTE nOffset)
+DECLSPEC_NOINLINE static void CALLBACK smbios_read_string(LPTSTR pszData, DWORD cchData, SMBIOS_HEADER *pHeader, BYTE nOffset)
 {
 	BYTE nField = *((BYTE *)pHeader + nOffset);
 	BYTE *pbInfo = (BYTE *)pHeader + pHeader->Length;
@@ -138,9 +138,9 @@ DECLSPEC_NOINLINE static void CALLBACK FieldHandler_String(LPTSTR pszData, DWORD
 }
 
 //
-// FieldHandler
+// smbios_type_broker
 //
-DECLSPEC_NOINLINE static void CALLBACK FieldHandler(LPTSTR pszData, DWORD cchData, SMBIOS_HEADER *pHeader, BYTE nLength, BYTE nType, BYTE nOffset)
+DECLSPEC_NOINLINE static void CALLBACK smbios_type_broker(LPTSTR pszData, DWORD cchData, SMBIOS_HEADER *pHeader, BYTE nLength, BYTE nType, BYTE nOffset)
 {
 	if (pHeader->Length >= nLength)
 	{
@@ -162,10 +162,10 @@ DECLSPEC_NOINLINE static void CALLBACK FieldHandler(LPTSTR pszData, DWORD cchDat
 			wnsprintf(pszData, cchData, TEXT("%08X%08X"), pid.HighPart, pid.LowPart);
 			break;
 		case SMBFT_TYPE16_CAPACITY:
-			wnsprintf(pszData, cchData, TEXT("%ld"), FieldHandler_Capacity(pHeader));
+			wnsprintf(pszData, cchData, TEXT("%ld"), smbios_read_capacity(pHeader));
 			break;
 		case SMBFT_TYPE17_SIZE:
-			wnsprintf(pszData, cchData, TEXT("%ld"), FieldHandler_Size(pHeader));
+			wnsprintf(pszData, cchData, TEXT("%ld"), smbios_read_size(pHeader));
 			break;
 		case SMBFT_COMMON_DWORD:
 			wnsprintf(pszData, cchData, TEXT("%lu"), *(DWORD *)((BYTE *)pHeader + nOffset));
@@ -174,7 +174,7 @@ DECLSPEC_NOINLINE static void CALLBACK FieldHandler(LPTSTR pszData, DWORD cchDat
 			wnsprintf(pszData, cchData, TEXT("%hu"), *(WORD *)((BYTE *)pHeader + nOffset));
 			break;
 		case SMBFT_COMMON_STRING:
-			FieldHandler_String(pszData, cchData, pHeader, nOffset);
+			smbios_read_string(pszData, cchData, pHeader, nOffset);
 			break;
 		default:
 			break;
@@ -183,9 +183,9 @@ DECLSPEC_NOINLINE static void CALLBACK FieldHandler(LPTSTR pszData, DWORD cchDat
 }
 
 //
-// FieldBroker
+// smbios_data_broker
 //
-DECLSPEC_NOINLINE static void CALLBACK FieldBroker(LPTSTR pszData, DWORD cchData, BYTE *pbData, DWORD cbData, const SMBIOS_DATA_PARAM *psdp)
+DECLSPEC_NOINLINE static void CALLBACK smbios_data_broker(LPTSTR pszData, DWORD cchData, BYTE *pbData, DWORD cbData, const SMBIOS_DATA_PARAM *psdp)
 {
 	BYTE *pbInfo = pbData;
 	BYTE nIndex = 0;
@@ -196,7 +196,7 @@ DECLSPEC_NOINLINE static void CALLBACK FieldBroker(LPTSTR pszData, DWORD cchData
 
 		if (pHeader->Type == psdp->nType && (nIndex++ == psdp->nIndex))
 		{
-			FieldHandler(pszData, cchData, pHeader, psdp->nLength, psdp->nData, psdp->nOffset);
+			smbios_type_broker(pszData, cchData, pHeader, psdp->nLength, psdp->nData, psdp->nOffset);
 			break;
 		}
 
@@ -214,9 +214,9 @@ DECLSPEC_NOINLINE static void CALLBACK FieldBroker(LPTSTR pszData, DWORD cchData
 }
 
 //
-// DataHandler
+// smbios_api_impl
 //
-DECLSPEC_NOINLINE static void CALLBACK DataHandler(LPTSTR pszData, DWORD cchData, const SMBIOS_DATA_PARAM *psdp)
+DECLSPEC_NOINLINE static void CALLBACK smbios_api_impl(LPTSTR pszData, DWORD cchData, const SMBIOS_DATA_PARAM *psdp)
 {
 	WMIHANDLE hBlock;
 	ULONG nError = WmiOpenBlock((GUID *)&MSSmBios_RawSMBiosTables_GUID, WMIGUID_QUERY, &hBlock);
@@ -238,7 +238,7 @@ DECLSPEC_NOINLINE static void CALLBACK DataHandler(LPTSTR pszData, DWORD cchData
 
 			case NO_ERROR:
 				pRawData = (MSSmBios_RawSMBiosTables *)(pbBlock + ((WNODE_ALL_DATA *)pbBlock)->DataBlockOffset);
-				FieldBroker(pszData, cchData, pRawData->SMBiosData, pRawData->Size, psdp);
+				smbios_data_broker(pszData, cchData, pRawData->SMBiosData, pRawData->Size, psdp);
 				HeapFree(hHeap, 0, pbBlock);
 				bResult = TRUE;
 				break;
@@ -246,6 +246,7 @@ DECLSPEC_NOINLINE static void CALLBACK DataHandler(LPTSTR pszData, DWORD cchData
 			default:
 				break;
 			}
+
 		} while (!bResult);
 
 		WmiCloseBlock(hBlock);
@@ -253,9 +254,9 @@ DECLSPEC_NOINLINE static void CALLBACK DataHandler(LPTSTR pszData, DWORD cchData
 }
 
 //
-// DataBroker
+// smbios_api_broker
 //
-DECLSPEC_NOINLINE static void CALLBACK DataBroker(stack_t **stacktop, int nLength, SMBIOS_DATA_PARAM *psdp)
+DECLSPEC_NOINLINE static void CALLBACK smbios_api_broker(stack_t **stacktop, int nLength, SMBIOS_DATA_PARAM *psdp)
 {
 	if (stacktop != NULL)
 	{
@@ -269,7 +270,7 @@ DECLSPEC_NOINLINE static void CALLBACK DataBroker(stack_t **stacktop, int nLengt
 		stack_t *th = (stack_t *)GlobalAlloc(GPTR, sizeof(stack_t) + nLength * sizeof(TCHAR));
 		if (th != NULL)
 		{
-			DataHandler(th->text, nLength, psdp);
+			smbios_api_impl(th->text, nLength, psdp);
 			th->next = *stacktop;
 			*stacktop = th;
 		}
@@ -287,7 +288,7 @@ PLUGINAPI(GetSystemManufacturer)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, Manufacturer);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -301,7 +302,7 @@ PLUGINAPI(GetSystemSerialNumber)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, SerialNumber);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -315,7 +316,7 @@ PLUGINAPI(GetSystemProductName)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, ProductName);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -329,7 +330,7 @@ PLUGINAPI(GetSystemUUID)
 	sdp.nData = SMBFT_TYPE01_UUID;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, UUID);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -343,7 +344,7 @@ PLUGINAPI(GetSystemFamily)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, Family);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -357,7 +358,7 @@ PLUGINAPI(GetModuleManufacturer)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_BASEBOARD_INFORMATION, Manufacturer);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -371,7 +372,7 @@ PLUGINAPI(GetModuleSerialNumber)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_BASEBOARD_INFORMATION, SerialNumber);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -385,7 +386,7 @@ PLUGINAPI(GetModuleProductName)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_BASEBOARD_INFORMATION, Product);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -399,7 +400,7 @@ PLUGINAPI(GetProcessorID)
 	sdp.nData = SMBFT_TYPE04_PROCESSOR;
 	sdp.nOffset = FIELD_OFFSET(SMBIOS_PROCESSOR_INFORMATION, ProcessorID);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -413,7 +414,7 @@ PLUGINAPI(GetMemoryArrayCapacity)
 	sdp.nData = SMBFT_TYPE16_CAPACITY;
 	sdp.nOffset = FIELD_OFFSET(PHYSICAL_MEMORY_ARRAY_INFORMATION, MaximumCapacity);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -427,7 +428,7 @@ PLUGINAPI(GetMemoryArrayNumbers)
 	sdp.nData = SMBFT_COMMON_WORD;
 	sdp.nOffset = FIELD_OFFSET(PHYSICAL_MEMORY_ARRAY_INFORMATION, NumberOfMemoryDevices);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -442,7 +443,7 @@ PLUGINAPI(GetMemoryManufacturer)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Manufacturer);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -457,7 +458,7 @@ PLUGINAPI(GetMemorySerialNumber)
 	sdp.nData = SMBFT_COMMON_STRING;
 	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, SerialNumber);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -472,7 +473,7 @@ PLUGINAPI(GetMemorySpeed)
 	sdp.nData = SMBFT_COMMON_WORD;
 	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Speed);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 //
@@ -487,7 +488,7 @@ PLUGINAPI(GetMemorySize)
 	sdp.nData = SMBFT_TYPE17_SIZE;
 	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
-	DataBroker(stacktop, nLength, &sdp);
+	smbios_api_broker(stacktop, nLength, &sdp);
 }
 
 #if defined(_DEBUG)
@@ -598,7 +599,7 @@ int _tmain(int argc, _TCHAR *argv[])
 		sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
 		sdp.nData = SMBFT_TYPE17_SIZE;
 		sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
-		FieldBroker(rgcData, cchData, pbData, cbData, &sdp);
+		smbios_data_broker(rgcData, cchData, pbData, cbData, &sdp);
 
 		LocalFree(pbData);
 	}

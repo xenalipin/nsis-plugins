@@ -22,9 +22,16 @@
 #endif
 
 //
+// Global constants
+//
+static const char rgcLine[] = { '\r', '\n' };
+static const UINT cchLine = ARRAYSIZE(rgcLine);
+
+//
 // Global variables
 //
 static HMODULE hModule = nullptr;
+static HANDLE hStdOut = nullptr;
 
 //
 // PluginCallback
@@ -36,42 +43,38 @@ static UINT_PTR PluginCallback(NSPIM msg)
 
 static LRESULT CALLBACK InstFilesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	NMHDR *pnmh = reinterpret_cast<NMHDR *>(lParam);
+	LRESULT lResult;
 
-	if ((uMsg == WM_NOTIFY) && (pnmh->code == LVN_INSERTITEM))
+	if ((uMsg == WM_NOTIFY) && (reinterpret_cast<NMHDR *>(lParam)->code == LVN_INSERTITEM))
 	{
-		static TCHAR rgcLine[] = { _T('\r'), _T('\n') };
-		static DWORD cchLine = ARRAYSIZE(rgcLine);
-
-		HLOCAL pszData = LocalAlloc(LPTR, dwRefData * sizeof(TCHAR));
+		LPVOID pszData = calloc(dwRefData, sizeof(char));
 		if (pszData != nullptr)
 		{
-			HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			LVITEMA lvi = { 0 };
+
 			DWORD cchRead;
 			DWORD cchData;
 
-			NMLISTVIEW *pnmlv = reinterpret_cast<NMLISTVIEW *>(pnmh);
-
-			HWND hwndLV = pnmlv->hdr.hwndFrom;
-			int iItem = pnmlv->iItem;
-
-			LVITEM lvi = { 0 };
+			HWND hwndLV = reinterpret_cast<NMLISTVIEW *>(lParam)->hdr.hwndFrom;
+			int iItem = reinterpret_cast<NMLISTVIEW *>(lParam)->iItem;
 
 			lvi.cchTextMax = static_cast<int>(dwRefData);
-			lvi.pszText = static_cast<LPTSTR>(pszData);
+			lvi.pszText = static_cast<char *>(pszData);
 
-			cchRead = static_cast<DWORD>(SendMessage(hwndLV, LVM_GETITEMTEXT, iItem, reinterpret_cast<LPARAM>(&lvi)));
+			cchRead = static_cast<DWORD>(SendMessage(hwndLV, LVM_GETITEMTEXTA, iItem, reinterpret_cast<LPARAM>(&lvi)));
 			if (cchRead > 0)
 			{
-				WriteConsole(hStdOut, pszData, cchRead, &cchData, nullptr);
-				WriteConsole(hStdOut, rgcLine, cchLine, &cchData, nullptr);
+				WriteFile(hStdOut, pszData, cchRead, &cchData, nullptr);
+				WriteFile(hStdOut, rgcLine, cchLine, &cchData, nullptr);
 			}
 
-			LocalFree(pszData);
+			free(pszData);
 		}
 	}
 
-	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	lResult = DefSubclassProc(hWnd, uMsg, wParam, lParam);
+
+	return lResult;
 }
 
 PLUGINAPI(Start)
@@ -79,10 +82,11 @@ PLUGINAPI(Start)
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	if (AllocConsole())
 	{
-		HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-		DWORD dwMode = CONSOLE_FULLSCREEN;
-		COORD coord = { 0 };
-		SetConsoleDisplayMode(hStdOut, dwMode, &coord);
+		hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleDisplayMode(
+			hStdOut,
+			CONSOLE_FULLSCREEN,
+			nullptr);
 	}
 }
 
@@ -90,16 +94,30 @@ PLUGINAPI(Attach)
 {
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	HWND hwndDlg = FindWindowEx(hwndParent, nullptr, WC_DIALOG, nullptr);
-	UINT_PTR uSubclassId = reinterpret_cast<UINT_PTR>(hwndParent);
-	SetWindowSubclass(hwndDlg, InstFilesProc, uSubclassId, nLength);
+	if (IsWindow(hwndDlg))
+	{
+		UINT_PTR uSubclassId = reinterpret_cast<UINT_PTR>(hwndParent);
+		DWORD_PTR dwRefData = static_cast<DWORD_PTR>(nLength);
+		SetWindowSubclass(
+			hwndDlg,
+			InstFilesProc,
+			uSubclassId,
+			dwRefData);
+	}
 }
 
 PLUGINAPI(Detach)
 {
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	HWND hwndDlg = FindWindowEx(hwndParent, nullptr, WC_DIALOG, nullptr);
-	UINT_PTR uSubclassId = reinterpret_cast<UINT_PTR>(hwndParent);
-	RemoveWindowSubclass(hwndDlg, InstFilesProc, uSubclassId);
+	if (IsWindow(hwndDlg))
+	{
+		UINT_PTR uSubclassId = reinterpret_cast<UINT_PTR>(hwndParent);
+		RemoveWindowSubclass(
+			hwndDlg,
+			InstFilesProc,
+			uSubclassId);
+	}
 }
 
 PLUGINAPI(Stop)
