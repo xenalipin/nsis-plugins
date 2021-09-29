@@ -46,7 +46,7 @@ template <typename T> using StringT = typename StringAutoT<T>::type;
 //
 // tstring
 //
-typedef typename StringAutoT<TCHAR>::type tstring;
+typedef StringAutoT<TCHAR>::type tstring;
 
 //
 // Global variables
@@ -241,7 +241,7 @@ static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
 //
 static void UpdateResult(LPTSTR pszData, int cchData, const tstring &strPath, BOOL bAppend)
 {
-	wnsprintf(pszData, cchData, szFmtHex, UpdateRegistry(strPath, bAppend));
+	wnsprintf(pszData, cchData, szFormat, UpdateRegistry(strPath, bAppend));
 }
 
 //
