@@ -21,32 +21,18 @@
 #define PLUGINAPI(Name_) __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
 #endif
 
-//
-// StringAutoT
-//
-template <typename CharT> struct StringAutoT
+namespace std
 {
-};
-
-template <> struct StringAutoT<WCHAR>
-{
-	typedef std::wstring type;
-};
-
-template <> struct StringAutoT<char>
-{
-	typedef std::string type;
-};
-
-//
-// StringT
-//
-template <typename T> using StringT = typename StringAutoT<T>::type;
-
-//
-// tstring
-//
-typedef StringAutoT<TCHAR>::type tstring;
+	//
+	// std::StringT<CharT>
+	//
+	template <typename CharT>
+	using StringT = basic_string<CharT>;
+	//
+	// std::tstring
+	//
+	using tstring = StringT<TCHAR>;
+}
 
 //
 // Global variables
@@ -55,6 +41,8 @@ static HMODULE hModule = nullptr;
 
 static const TCHAR szPathKey[] = _T(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
 static const TCHAR szPathName[] = _T("Path");
+
+static const TCHAR szEnviron[] = _T("Environment");
 
 static const TCHAR szFormat[] = _T("%d");
 
@@ -80,7 +68,7 @@ static inline HRESULT HRESULT_FROM_ERROR(DWORD dwError)
 //
 // PathIsEqual
 //
-static bool PathIsEqual(const tstring &strPath1, const tstring &strPath2)
+static bool PathIsEqual(const std::tstring &strPath1, const std::tstring &strPath2)
 {
 	LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 	auto data1 = strPath1.data();
@@ -105,7 +93,7 @@ static bool PathIsEqual(const tstring &strPath1, const tstring &strPath2)
 //
 // RegGetStringEx
 //
-static DWORD RegGetStringEx(HKEY hKey, LPCTSTR pszName, DWORD *pdwType, tstring &strData)
+static DWORD RegGetStringEx(HKEY hKey, LPCTSTR pszName, DWORD *pdwType, std::tstring &strData)
 {
 	DWORD dwError;
 	DWORD cbData;
@@ -118,12 +106,16 @@ static DWORD RegGetStringEx(HKEY hKey, LPCTSTR pszName, DWORD *pdwType, tstring 
 		{
 			HANDLE hHeap = GetProcessHeap();
 			PVOID pvData = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbData);
-			DWORD cbRead = cbData;
 			if (pvData != nullptr)
 			{
-				dwError = RegQueryValueEx(hKey, pszName, nullptr, pdwType, static_cast<BYTE *>(pvData), &cbRead);
-				strData.assign(static_cast<LPCTSTR>(pvData));
-				HeapFree(hHeap, 0, pvData);
+				dwError = RegQueryValueEx(hKey, pszName, nullptr, pdwType, static_cast<BYTE *>(pvData), &cbData);
+				switch (dwError) {
+				case ERROR_SUCCESS:
+					strData.assign(static_cast<LPCTSTR>(pvData));
+				default:
+					HeapFree(hHeap, 0, pvData);
+					break;
+				}
 			}
 			else
 			{
@@ -142,11 +134,11 @@ static DWORD RegGetStringEx(HKEY hKey, LPCTSTR pszName, DWORD *pdwType, tstring 
 //
 // RegSetStringEx
 //
-static DWORD RegSetStringEx(HKEY hKey, LPCTSTR pszName, DWORD dwType, const tstring &strData)
+static DWORD RegSetStringEx(HKEY hKey, LPCTSTR pszName, DWORD dwType, const std::tstring &strData)
 {
 	const BYTE *pbData = reinterpret_cast<const BYTE *>(strData.c_str());
 	const DWORD cbData = static_cast<DWORD>(strData.size()) * sizeof(TCHAR) + sizeof(TCHAR);
-	return RegSetValueEx(hKey, szPathName, 0, dwType, pbData, cbData);
+	return RegSetValueEx(hKey, pszName, 0, dwType, pbData, cbData);
 }
 
 //
@@ -158,10 +150,10 @@ namespace Paths
 //
 // UpdatePathItem
 //
-static tstring &UpdatePathItem(tstring &strData, const tstring &strPath, BOOL fAppend)
+static std::tstring &UpdatePathItem(std::tstring &strData, const std::tstring &strPath, BOOL fAppend)
 {
-	tstring::size_type ulOffset = 0;
-	tstring::size_type ulCurPos;
+	std::tstring::size_type ulOffset = 0;
+	std::tstring::size_type ulCurPos;
 
 	bool fExisted = false;
 
@@ -170,9 +162,9 @@ static tstring &UpdatePathItem(tstring &strData, const tstring &strPath, BOOL fA
 		strData += cSemicolon;
 	}
 
-	while ((ulCurPos = strData.find(cSemicolon, ulOffset)) != tstring::npos)
+	while ((ulCurPos = strData.find(cSemicolon, ulOffset)) != std::tstring::npos)
 	{
-		tstring strItem(&strData[ulOffset], &strData[ulCurPos]);
+		std::tstring strItem(&strData[ulOffset], &strData[ulCurPos]);
 
 		if (PathIsEqual(strItem, strPath))
 		{
@@ -205,7 +197,7 @@ static tstring &UpdatePathItem(tstring &strData, const tstring &strPath, BOOL fA
 //
 // UpdateRegistry
 //
-static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
+static DWORD UpdateRegistry(const std::tstring &strPath, BOOL bAppend)
 {
 	DWORD dwError;
 	HKEY hSubKey;
@@ -213,8 +205,7 @@ static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
 	dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szPathKey, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hSubKey);
 	if (dwError == ERROR_SUCCESS)
 	{
-		DWORD_PTR dwResult;
-		tstring strData;
+		std::tstring strData;
 		DWORD dwType;
 
 		dwError = RegGetStringEx(hSubKey, szPathName, &dwType, strData);
@@ -223,7 +214,15 @@ static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
 			dwError = RegSetStringEx(hSubKey, szPathName, dwType, UpdatePathItem(strData, strPath, bAppend));
 			if (dwError == ERROR_SUCCESS)
 			{
-				if (!SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(_T("Environment")), SMTO_ABORTIFHUNG, 128, &dwResult))
+				HWND hWnd = HWND_BROADCAST;
+				UINT uMsg = WM_SETTINGCHANGE;
+				WPARAM wParam = 0L;
+				LPARAM lParam = reinterpret_cast<LPARAM>(szEnviron);
+				UINT fuFlags = SMTO_ABORTIFHUNG;
+				UINT uTimeOut = 128U;
+				DWORD_PTR dwResult;
+
+				if (!SendMessageTimeout(hWnd, uMsg, wParam, lParam, fuFlags, uTimeOut, &dwResult))
 				{
 					dwError = GetLastError();
 				}
@@ -239,7 +238,7 @@ static DWORD UpdateRegistry(const tstring &strPath, BOOL bAppend)
 //
 // UpdateResult
 //
-static void UpdateResult(LPTSTR pszData, int cchData, const tstring &strPath, BOOL bAppend)
+static void UpdateResult(LPTSTR pszData, int cchData, const std::tstring &strPath, BOOL bAppend)
 {
 	wnsprintf(pszData, cchData, szFormat, UpdateRegistry(strPath, bAppend));
 }
@@ -247,10 +246,10 @@ static void UpdateResult(LPTSTR pszData, int cchData, const tstring &strPath, BO
 //
 // VerifyPathItem
 //
-static bool VerifyPathItem(tstring &strData, const tstring &strPath)
+static bool VerifyPathItem(std::tstring &strData, const std::tstring &strPath)
 {
-	tstring::size_type ulOffset = 0;
-	tstring::size_type ulCurPos;
+	std::tstring::size_type ulOffset = 0;
+	std::tstring::size_type ulCurPos;
 
 	bool bPresent = false;
 
@@ -259,9 +258,9 @@ static bool VerifyPathItem(tstring &strData, const tstring &strPath)
 		strData += cSemicolon;
 	}
 
-	while (!bPresent && (ulCurPos = strData.find(cSemicolon, ulOffset)) != tstring::npos)
+	while (!bPresent && (ulCurPos = strData.find(cSemicolon, ulOffset)) != std::tstring::npos)
 	{
-		tstring strItem(&strData[ulOffset], &strData[ulCurPos]);
+		std::tstring strItem(&strData[ulOffset], &strData[ulCurPos]);
 		bPresent = PathIsEqual(strItem, strPath);
 		if (!bPresent)
 		{
@@ -275,7 +274,7 @@ static bool VerifyPathItem(tstring &strData, const tstring &strPath)
 //
 // VerifyRegistry
 //
-static BOOL VerifyRegistry(const tstring &strPath)
+static BOOL VerifyRegistry(const std::tstring &strPath)
 {
 	BOOL bResult;
 
@@ -285,7 +284,7 @@ static BOOL VerifyRegistry(const tstring &strPath)
 	dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szPathKey, 0, KEY_QUERY_VALUE, &hKey);
 	if (dwError == ERROR_SUCCESS)
 	{
-		tstring strData;
+		std::tstring strData;
 
 		dwError = RegGetStringEx(hKey, szPathName, nullptr, strData);
 		if (dwError == ERROR_SUCCESS)
@@ -310,7 +309,7 @@ static BOOL VerifyRegistry(const tstring &strPath)
 //
 // VerifyResult
 //
-static void VerifyResult(LPTSTR pszData, int cchData, const tstring &strPath)
+static void VerifyResult(LPTSTR pszData, int cchData, const std::tstring &strPath)
 {
 	wnsprintf(pszData, cchData, szFormat, VerifyRegistry(strPath));
 }
@@ -322,7 +321,7 @@ static void VerifyResult(LPTSTR pszData, int cchData, const tstring &strPath)
 //
 static void PathsUpdateImpl(stack_t **stacktop, int nLength, BOOL bAppend)
 {
-	tstring strPath;
+	std::tstring strPath;
 
 	if (*stacktop != nullptr)
 	{
@@ -346,7 +345,7 @@ static void PathsUpdateImpl(stack_t **stacktop, int nLength, BOOL bAppend)
 //
 static void PathsVerifyImpl(stack_t **stacktop, int nLength)
 {
-	tstring strPath;
+	std::tstring strPath;
 
 	if (*stacktop != nullptr)
 	{
@@ -408,18 +407,18 @@ int _tmain(int argc, _TCHAR *argv[])
 	TCHAR rgcInfo[256] = { 0 };
 	DWORD cchInfo = ARRAYSIZE(rgcInfo);
 
-	tstring strPath(_T(R"(D:\Git\Bin)"));
+	std::tstring strPath(_T(R"(D:\Git\Bin)"));
 
-	tstring strData1(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
+	std::tstring strData1(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
 	Paths::UpdatePathItem(strData1, strPath, FALSE);
 
-	tstring strData2(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
+	std::tstring strData2(_T(R"(C:\Windows;C:\Windows\System32;D:\Git\bin\;D:\Git\bin;E:\GitHub;D:\git\bin\;D:\git\bin;F:\GitLab)"));
 	Paths::UpdatePathItem(strData2, strPath, TRUE);
 
-	tstring strData3(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
+	std::tstring strData3(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
 	Paths::UpdatePathItem(strData3, strPath, FALSE);
 
-	tstring strData4(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
+	std::tstring strData4(_T(R"(C:\Windows;C:\Windows\System32;E:\GitHub)"));
 	Paths::UpdatePathItem(strData4, strPath, TRUE);
 
 	Paths::UpdateResult(rgcInfo, cchInfo, strPath, FALSE);
