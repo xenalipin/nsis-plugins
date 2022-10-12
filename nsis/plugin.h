@@ -16,22 +16,14 @@
 // Copyright (C) 1999-2020 Nullsoft and Contributors
 //
 // modified by jiake (137729898@qq.com)
-// support for Windows style name
 // support for nullptr keyword
 //
-
-#ifndef _NSIS_PLUGIN_H
-#define _NSIS_PLUGIN_H
 
 #pragma once
 
 #if defined(__cplusplus)
 #	if defined(_MSC_VER) && (_MSC_VER < 1600) && !defined(_NATIVE_NULLPTR_SUPPORTED)
 #		define nullptr NULL
-#	endif
-#else
-#	if !defined(nullptr)
-#		define nullptr ((void *)0)
 #	endif
 #endif
 
@@ -167,5 +159,3 @@ enum {
 	INST_LANG,    // $LANGUAGE
 	__INST_LAST
 };
-
-#endif

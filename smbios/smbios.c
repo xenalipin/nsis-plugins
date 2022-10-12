@@ -51,7 +51,7 @@ typedef enum _SMBIOS_DATA_FLAGS {
 // SMBIOS_DATA_PARAM
 //
 typedef struct _SMBIOS_DATA_PARAM {
-	UINT uFlags;
+	WORD wFlags;
 	BYTE nIndex;
 	BYTE nType;
 	BYTE nLength;
@@ -80,11 +80,11 @@ DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_capacity(SMBIOS_HEADER *pHead
 	PHYSICAL_MEMORY_ARRAY_INFORMATION *ppmai = (PHYSICAL_MEMORY_ARRAY_INFORMATION *)pHeader;
 	if ((ppmai->Length >= SMBIOS_TYPE16_SIZE_0207) && (ppmai->MaximumCapacity == 0x80000000UL))
 	{
-		return (LONG)(ppmai->ExtendedMaximumCapacity >> 20);
+		return (LONG)(ppmai->ExtendedMaximumCapacity >> 20UL);
 	}
 	else
 	{
-		return (LONG)(ppmai->MaximumCapacity >> 10);
+		return (LONG)(ppmai->MaximumCapacity >> 10UL);
 	}
 }
 
@@ -102,7 +102,7 @@ DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_size(SMBIOS_HEADER *pHeader)
 	default:
 		if ((pmdi->Length >= SMBIOS_TYPE17_SIZE_0207) && (pmdi->Size == 0x7FFFU))
 		{
-			return (LONG)(pmdi->ExtendedSize & 0x7FFFFFFFU);
+			return (LONG)(pmdi->ExtendedSize & 0x7FFFFFFFUL);
 		}
 		if (pmdi->Size & 0x8000U)
 		{
@@ -120,9 +120,10 @@ DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_size(SMBIOS_HEADER *pHeader)
 //
 DECLSPEC_NOINLINE static void CALLBACK smbios_read_string(LPTSTR pszData, DWORD cchData, SMBIOS_HEADER *pHeader, BYTE nOffset)
 {
-	BYTE nField = *((BYTE *)pHeader + nOffset);
+	BYTE  nField = *((BYTE *)pHeader + nOffset);
 	BYTE *pbInfo = (BYTE *)pHeader + pHeader->Length;
-	BYTE nIndex = 0;
+	BYTE  nIndex = 0;
+	BYTE  bData;
 	while ((nIndex < nField) && *pbInfo)
 	{
 		if (++nIndex == nField)
@@ -130,7 +131,6 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_read_string(LPTSTR pszData, DWORD 
 			wnsprintf(pszData, cchData, TEXT("%hs"), pbInfo);
 			break;
 		}
-		BYTE bData;
 		do {
 			bData = *pbInfo++;
 		} while (bData);
@@ -219,35 +219,37 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_data_broker(LPTSTR pszData, DWORD 
 DECLSPEC_NOINLINE static void CALLBACK smbios_api_impl(LPTSTR pszData, DWORD cchData, const SMBIOS_DATA_PARAM *psdp)
 {
 	WMIHANDLE hBlock;
-	ULONG nError = WmiOpenBlock((GUID *)&MSSmBios_RawSMBiosTables_GUID, WMIGUID_QUERY, &hBlock);
-	if (nError == NO_ERROR)
+	ULONG nError;
+
+	nError = WmiOpenBlock((GUID *)&MSSmBios_RawSMBiosTables_GUID, WMIGUID_QUERY, &hBlock);
+	if (nError == ERROR_SUCCESS)
 	{
-		BOOL bResult = FALSE;
 		HANDLE hHeap = GetProcessHeap();
 		BYTE *pbBlock = NULL;
 		DWORD cbBlock = 0;
 
-		do {
-			MSSmBios_RawSMBiosTables *pRawData;
+		MSSmBios_RawSMBiosTables *pRawData;
 
-			nError = WmiQueryAllData(hBlock, &cbBlock, pbBlock);
-			switch (nError) {
-			case ERROR_INSUFFICIENT_BUFFER:
-				pbBlock = (BYTE *)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbBlock);
-				break;
-
-			case NO_ERROR:
-				pRawData = (MSSmBios_RawSMBiosTables *)(pbBlock + ((WNODE_ALL_DATA *)pbBlock)->DataBlockOffset);
-				smbios_data_broker(pszData, cchData, pRawData->SMBiosData, pRawData->Size, psdp);
-				HeapFree(hHeap, 0, pbBlock);
-				bResult = TRUE;
-				break;
-
-			default:
-				break;
+	TryAgain:
+		nError = WmiQueryAllData(hBlock, &cbBlock, pbBlock);
+		switch (nError) {
+		case ERROR_INSUFFICIENT_BUFFER:
+			pbBlock = (BYTE *)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cbBlock);
+			if (pbBlock != NULL)
+			{
+				goto TryAgain;
 			}
+			break;
 
-		} while (!bResult);
+		case ERROR_SUCCESS:
+			pRawData = (MSSmBios_RawSMBiosTables *)(pbBlock + ((WNODE_ALL_DATA *)pbBlock)->DataBlockOffset);
+			smbios_data_broker(pszData, cchData, pRawData->SMBiosData, pRawData->Size, psdp);
+			HeapFree(hHeap, 0, pbBlock);
+			break;
+
+		default:
+			break;
+		}
 
 		WmiCloseBlock(hBlock);
 	}
@@ -260,7 +262,7 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_api_broker(stack_t **stacktop, int
 {
 	if (stacktop != NULL)
 	{
-		if ((psdp->uFlags & SMBDF_INDEX) && (*stacktop != NULL))
+		if ((psdp->wFlags & SMBDF_INDEX) && (*stacktop != NULL))
 		{
 			stack_t *th = *stacktop;
 			psdp->nIndex = StrToInt(th->text);
@@ -437,7 +439,7 @@ PLUGINAPI(GetMemoryArrayNumbers)
 PLUGINAPI(GetMemoryManufacturer)
 {
 	SMBIOS_DATA_PARAM sdp = { 0 };
-	sdp.uFlags = SMBDF_INDEX;
+	sdp.wFlags = SMBDF_INDEX;
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0203;
 	sdp.nData = SMBFT_COMMON_STRING;
@@ -452,7 +454,7 @@ PLUGINAPI(GetMemoryManufacturer)
 PLUGINAPI(GetMemorySerialNumber)
 {
 	SMBIOS_DATA_PARAM sdp = { 0 };
-	sdp.uFlags = SMBDF_INDEX;
+	sdp.wFlags = SMBDF_INDEX;
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0203;
 	sdp.nData = SMBFT_COMMON_STRING;
@@ -467,7 +469,7 @@ PLUGINAPI(GetMemorySerialNumber)
 PLUGINAPI(GetMemorySpeed)
 {
 	SMBIOS_DATA_PARAM sdp = { 0 };
-	sdp.uFlags = SMBDF_INDEX;
+	sdp.wFlags = SMBDF_INDEX;
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0203;
 	sdp.nData = SMBFT_COMMON_WORD;
@@ -482,7 +484,7 @@ PLUGINAPI(GetMemorySpeed)
 PLUGINAPI(GetMemorySize)
 {
 	SMBIOS_DATA_PARAM sdp = { 0 };
-	sdp.uFlags = SMBDF_INDEX;
+	sdp.wFlags = SMBDF_INDEX;
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
 	sdp.nData = SMBFT_TYPE17_SIZE;

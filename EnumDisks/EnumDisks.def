@@ -4,7 +4,10 @@ EXPORTS
 	GetEnumerator    @3
 	GetFriendlyName  @4
 	GetSerialNumber  @5
-	GetProductId     @6
-	GetVendorId      @7
-	GetDiskSize      @8
-	Clear            @9
+	GetProductID     @6
+	GetVendorID      @7
+	GetHealthStatus  @8
+	GetSeekPenalty   @9
+	GetTrimEnabled   @10
+	GetDiskSize      @11
+	Clear            @12

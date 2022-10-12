@@ -1,4 +1,4 @@
-﻿enum {
+enum {
 	BiosInfo,
 	SystemInfo,
 	BaseboardInfo,
