@@ -37,6 +37,7 @@ typedef enum _SMBIOS_FIELD_TYPE {
 	SMBFT_TYPE01_UUID,
 	SMBFT_TYPE04_PROCESSOR,
 	SMBFT_TYPE16_CAPACITY,
+	SMBFT_TYPE17_SPEED,
 	SMBFT_TYPE17_SIZE,
 } SMBIOS_FIELD_TYPE;
 
@@ -89,6 +90,22 @@ DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_capacity(SMBIOS_HEADER *pHead
 }
 
 //
+// smbios_read_speed
+//
+DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_speed(SMBIOS_HEADER *pHeader)
+{
+	MEMORY_DEVICE_INFORMATION *pmdi = (MEMORY_DEVICE_INFORMATION *)pHeader;
+	if ((pmdi->Length >= SMBIOS_TYPE17_SIZE_0303) && (pmdi->Speed == 0xFFFFU))
+	{
+		return (LONG)(pmdi->ExtendedSpeed & 0x7FFFFFFFUL);
+	}
+	else
+	{
+		return (LONG)(pmdi->Speed);
+	}
+}
+
+//
 // smbios_read_size
 //
 DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_size(SMBIOS_HEADER *pHeader)
@@ -96,20 +113,28 @@ DECLSPEC_NOINLINE static LONG CALLBACK smbios_read_size(SMBIOS_HEADER *pHeader)
 	MEMORY_DEVICE_INFORMATION *pmdi = (MEMORY_DEVICE_INFORMATION *)pHeader;
 	switch (pmdi->Size) {
 	case 0xFFFFU:
+		// if the size is unknown, the field value is FFFFh.
 		return (LONG)(SHORT)pmdi->Size;
 	case 0x0U:
+		// if the value is 0, no memory device is installed in the socket.
 		return (LONG)pmdi->Size;
 	default:
+		// if the size is 32 GB-1 MB or greater, the field value is 7FFFh.
 		if ((pmdi->Length >= SMBIOS_TYPE17_SIZE_0207) && (pmdi->Size == 0x7FFFU))
 		{
+			// the actual size (in megabytes) is stored in the Extended Size field.
 			return (LONG)(pmdi->ExtendedSize & 0x7FFFFFFFUL);
 		}
+		// the granularity in which the value is specified depends on
+		// the setting of the most-significant bit (bit 15).
 		if (pmdi->Size & 0x8000U)
 		{
+			// if the bit is 1, the value is specified in kilobyte units.
 			return (LONG)(pmdi->Size & 0x7FFFU) >> 10U;
 		}
 		else
 		{
+			// if the bit is 0, the value is specified in megabyte units;
 			return (LONG)(pmdi->Size & 0x7FFFU);
 		}
 	}
@@ -163,6 +188,9 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_type_broker(LPTSTR pszData, DWORD 
 			break;
 		case SMBFT_TYPE16_CAPACITY:
 			wnsprintf(pszData, cchData, TEXT("%ld"), smbios_read_capacity(pHeader));
+			break;
+		case SMBFT_TYPE17_SPEED:
+			wnsprintf(pszData, cchData, TEXT("%ld"), smbios_read_speed(pHeader));
 			break;
 		case SMBFT_TYPE17_SIZE:
 			wnsprintf(pszData, cchData, TEXT("%ld"), smbios_read_size(pHeader));
@@ -330,7 +358,7 @@ PLUGINAPI(GetSystemUUID)
 	sdp.nType = SystemInfo;
 	sdp.nLength = SMBIOS_TYPE01_SIZE_0201;
 	sdp.nData = SMBFT_TYPE01_UUID;
-	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, UUID);
+//	sdp.nOffset = FIELD_OFFSET(SMBIOS_SYSTEM_INFORMATION, UUID);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	smbios_api_broker(stacktop, nLength, &sdp);
 }
@@ -400,7 +428,7 @@ PLUGINAPI(GetProcessorID)
 	sdp.nType = ProcessorInfo;
 	sdp.nLength = SMBIOS_TYPE04_SIZE_0200;
 	sdp.nData = SMBFT_TYPE04_PROCESSOR;
-	sdp.nOffset = FIELD_OFFSET(SMBIOS_PROCESSOR_INFORMATION, ProcessorID);
+//	sdp.nOffset = FIELD_OFFSET(SMBIOS_PROCESSOR_INFORMATION, ProcessorID);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	smbios_api_broker(stacktop, nLength, &sdp);
 }
@@ -414,7 +442,7 @@ PLUGINAPI(GetMemoryArrayCapacity)
 	sdp.nType = PhysicalMemoryArrayInfo;
 	sdp.nLength = SMBIOS_TYPE16_SIZE_0201;
 	sdp.nData = SMBFT_TYPE16_CAPACITY;
-	sdp.nOffset = FIELD_OFFSET(PHYSICAL_MEMORY_ARRAY_INFORMATION, MaximumCapacity);
+//	sdp.nOffset = FIELD_OFFSET(PHYSICAL_MEMORY_ARRAY_INFORMATION, MaximumCapacity);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	smbios_api_broker(stacktop, nLength, &sdp);
 }
@@ -472,8 +500,8 @@ PLUGINAPI(GetMemorySpeed)
 	sdp.wFlags = SMBDF_INDEX;
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0203;
-	sdp.nData = SMBFT_COMMON_WORD;
-	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Speed);
+	sdp.nData = SMBFT_TYPE17_SPEED;
+//	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Speed);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	smbios_api_broker(stacktop, nLength, &sdp);
 }
@@ -488,7 +516,7 @@ PLUGINAPI(GetMemorySize)
 	sdp.nType = MemoryDeviceInfo;
 	sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
 	sdp.nData = SMBFT_TYPE17_SIZE;
-	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
+//	sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
 	extra->RegisterPluginCallback(hModule, PluginCallback);
 	smbios_api_broker(stacktop, nLength, &sdp);
 }
@@ -600,7 +628,7 @@ int _tmain(int argc, _TCHAR *argv[])
 		sdp.nType = MemoryDeviceInfo;
 		sdp.nLength = SMBIOS_TYPE17_SIZE_0201;
 		sdp.nData = SMBFT_TYPE17_SIZE;
-		sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
+//		sdp.nOffset = FIELD_OFFSET(MEMORY_DEVICE_INFORMATION, Size);
 		smbios_data_broker(rgcData, cchData, pbData, cbData, &sdp);
 
 		LocalFree(pbData);
