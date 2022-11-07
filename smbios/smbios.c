@@ -28,6 +28,9 @@
 #define PLUGINAPI(Name_) __declspec(dllexport) void __cdecl Name_(HWND hwndParent, int nLength, LPTSTR variables, stack_t **stacktop, extra_parameters *extra, ...)
 #endif
 
+//
+// SMBIOS_VERSION
+//
 #define SMBIOS_VERSION(hi, lo) MAKEWORD(lo, hi)
 
 //
