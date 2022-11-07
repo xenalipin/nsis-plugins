@@ -160,7 +160,7 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_type_broker(LPTSTR pszData, DWORD 
 	switch (Field) {
 	case SMBFT_TYPE01_UUID:
 		do {
-			const UUID *puuid = (const UUID *)((const BYTE *)pHeader + pHeader->Length);
+			const UUID *puuid = (const UUID *)((const BYTE *)pHeader + Offset);
 			wnsprintf(
 				pszData,
 				cchData,
@@ -180,7 +180,7 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_type_broker(LPTSTR pszData, DWORD 
 		break;
 	case SMBFT_TYPE04_PROCESSOR:
 		do {
-			const ULARGE_INTEGER *ppid = (const ULARGE_INTEGER *)((const BYTE *)pHeader + pHeader->Length);
+			const ULARGE_INTEGER *ppid = (const ULARGE_INTEGER *)((const BYTE *)pHeader + Offset);
 			wnsprintf(pszData, cchData, TEXT("%08X%08X"), ppid->HighPart, ppid->LowPart);
 		} while (0);
 		break;
@@ -235,7 +235,7 @@ DECLSPEC_NOINLINE static void CALLBACK smbios_data_broker(LPTSTR pszData, DWORD 
 	{
 		DMI_HEADER *pHeader = (DMI_HEADER *)pbData;
 
-		if (pHeader->Type == psdp->Entry && (Index++ == psdp->Index) && (wVersion >= psdp->Version))
+		if ((pHeader->Type == psdp->Entry) && (Index++ == psdp->Index) && (wVersion >= psdp->Version))
 		{
 			smbios_type_broker(pszData, cchData, pHeader, wVersion, psdp->Field, psdp->Offset);
 			break;
