@@ -76,14 +76,14 @@ static bool PathIsEqual(const std::tstring &str1, const std::tstring &str2)
 	auto data2 = str2.c_str();
 	auto size2 = str2.size();
 
-	if (size1 > size2)
-	{
-		std::swap(data1, data2);
-		std::swap(size1, size2);
-	}
-
 	if (size1 != size2)
 	{
+		if (size1 > size2)
+		{
+			std::swap(data1, data2);
+			std::swap(size1, size2);
+		}
+
 		return (
 			(StrCmpNIC(data2, data1, size1) == 0) &&
 			(data2[size1++] == cBackslash) &&
